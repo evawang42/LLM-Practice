@@ -1,8 +1,6 @@
-"""Streaming chat with Ollama (async)
-
-This module exposes an async generator `chat()` that streams model output
-chunk-by-chunk from a running Ollama server.
-
+"""
+Streaming chat with Ollama (async)
+This module exposes an async generator `chat()` that streams model output chunk-by-chunk from a running Ollama server.
 """
 
 from typing import AsyncGenerator
