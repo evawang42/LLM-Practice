@@ -1,14 +1,13 @@
 """
-Streaming Q&A over local documents with Ollama (async)
+Streaming Q&A over local documents with Ollama
 This script demonstrates a minimal *retrieval-free* Q&A workflow where the model answers questions strictly based on the provided document text.
 """
 
-from typing import Literal, AsyncGenerator
+from typing import Literal, AsyncGenerator, Tuple
 import asyncio
 from ollama import AsyncClient
 from config import OLLAMA_URL
 
-from typing import Tuple, Literal
 IPromptMessage = Tuple[Literal['system', 'user', 'assistant', 'tool'], str]
 """The type of a prompt message."""
 
@@ -43,8 +42,11 @@ async def q_a(question: str, document: str) -> AsyncGenerator[str, None]:
     """
     # Prompt
     qa_prompt: list[IPromptMessage] = [
-        ('system', '請僅根據提供的內容回答；若找不到相關答案就表達不知道。回答一律使用繁體中文。'),
-        ('user',   '內容：\n{context}\n---\n問題：{question}\n請依上述內容作答。')
+        ('system', 'Answer strictly using ONLY the provided content. '
+                   'If the answer is not present, reply with "不知道". '
+                   'Respond in Traditional Chinese (zh-Hant).'),
+        ('user',   'Content:\n{context}\n---\nQuestion: {question}\n'
+                   'Answer strictly using the content above.')
     ]
     # Call the `chat()` function.
     async for chunk in chat(qa_prompt, {'question': question, 'context': document}):
@@ -52,8 +54,8 @@ async def q_a(question: str, document: str) -> AsyncGenerator[str, None]:
 
 async def main():
     sources = [
-        ('data/doc1_zh.md', ['麥當勞的核心價值是哪些？','麥當勞第一家餐廳是何時、由誰、在哪裡成立？','現在總統是誰？']),
-        ('data/doc2.md', ['Shake Shack 的創立背景是什麼？','2022 年的店面擴展目標是多少','台灣高鐵會蓋去屏東嗎？'])
+        ('data/your_file.txt', ['Question 1', 'Question 2']),
+        ('data/your_file.md', ['Question 1', 'Question 2']),
     ]
     for file_path, questions in sources:
         document = open(file_path, 'r', encoding='utf-8').read()

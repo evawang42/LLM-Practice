@@ -27,7 +27,7 @@ async def chat(input: dict[str, str]) -> AsyncGenerator[str, None]:
 
 async def main():
     async for chunk in chat({"input": "Who are you?"}):
-        print(chunk)
+        print(chunk, end='', flush=True)
 
 if __name__ == "__main__":
     asyncio.run(main())
