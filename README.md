@@ -2,7 +2,7 @@
 This repository contains hands-on practices with LLMs via the Ollama ecosystem, focused on streaming interaction, document Q&A, and prompt engineering.
 
 ## Task 1 - Streaming chat with Ollama
-This task demonstrates how to build a minimal async streaming chat function using the `ollama-python` client. The core component is an `async generator` that emits LLM-generated text in real-time, chunk by chunk.
+This task demonstrates how to build a async streaming chat function using the `ollama-python` client. The core component is an `async generator` that emits LLM-generated text in real-time, chunk by chunk.
 ### Code Summary
 ```python
 async def chat(input: dict[str, str]) -> AsyncGenerator[str, None]:
@@ -73,6 +73,71 @@ menu_path = Path("data/your_file.csv")
 ### ⚠ Known Issues
 - Despite explicitly prompting the LLM to respond in Traditional Chinese (zh-Hant), some responses are still occasionally returned in English.
 
+## Task 4 – Streaming Chat (SSE) with Ollama
+This task shows how to build a streaming chat backend with aiohttp, plus a frontend that renders the model’s answer as it streams.
+It consists of two files:
+- Task4_chat.py: chat pipeline to Ollama (LLM)
+- Task4_server.py: aiohttp server that exposes POST/chat and streams text via Server-Sent Events (SSE)
+### How It Works
+1. Frontend → /chat: sends JSON `{ "query": "…", "history": [ { "role": "user", "content": "…" }] }`
+2. Server (`chat_handler`): prepares an SSE response, calls `online_help_desk_chat()`.
+3. Chat core (`online_help_desk_chat`): builds messages `[(system, …), (user|assistant, …), …, (user, "{question}")]`, then delegates to `chat()`.
+4. `chat()`: calls Ollama AsyncClient.chat(stream=True), yields chunks.
+5. Server: wraps each chunk into SSE frames: `event: data\ndata: {"action":"response","message":"…"}\n\n`
+6. Frontend: appends `message` text to the chat window as it arrives.
+7. Server emits `event: end` to close the stream.
+### Frontend example
+```javascript
+const response = await fetch('http://localhost:8002/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({query, history: chatHistory.slice(0, -1)})
+});
+
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+
+let buffer = '';
+while (true) {
+    const {done, value} = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, {stream: true});
+    const lines = buffer.split('\n');
+    buffer = lines.pop();
+
+    for (const line of lines) {
+        if (line.startsWith('event: data')) continue;
+        if (line.startsWith('event: end')) return;
+        if (line.startsWith('data:')) {
+            const payload = JSON.parse(line.slice(5).trim());
+            if (payload.action === 'response') console.log(payload.message);
+        }
+    }
+}
+```
+### API Contract
+Endpoint: `POST /chat`
+
+Request body: `{"query": "string","history": [{"role":"user|assistant","content":"string"}]}`
+SSE Response:
+- Streamed chunk:
+```
+event: data
+data: {"action":"response","message":"<partial text>"}
+```
+- Error:
+```
+event: error
+data: {"action":"error","message":"<reason>"}
+```
+- End:
+```
+event: end
+data: {}
+```
 
 ## Reference
-- https://github.com/ollama/ollama-python
+- [Ollama Python Library](https://github.com/ollama/ollama-python)
+- [Understanding Server-Sent Events (SSE) with Node.js](https://itsfuad.medium.com/understanding-server-sent-events-sse-with-node-js-3e881c533081)
+- [Web Server Quickstart](https://docs.aiohttp.org/en/stable/web_quickstart.html)

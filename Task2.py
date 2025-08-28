@@ -6,7 +6,7 @@ This script demonstrates a minimal *retrieval-free* Q&A workflow where the model
 from typing import Literal, AsyncGenerator, Tuple
 import asyncio
 from ollama import AsyncClient
-from config import OLLAMA_URL
+from config import OLLAMA_URL, OLLAMA_MODEL
 
 IPromptMessage = Tuple[Literal['system', 'user', 'assistant', 'tool'], str]
 """The type of a prompt message."""
@@ -26,7 +26,7 @@ async def chat(messages: list[IPromptMessage], input_data: dict[str, str]) -> As
         str: Incremental text chunks produced by the model.
     """
     rendered = [{'role': role, 'content': content.format(**input_data)} for role, content in messages]
-    async for part in await AsyncClient(host=OLLAMA_URL).chat(model='llama3', messages=rendered, stream=True):
+    async for part in await AsyncClient(host=OLLAMA_URL).chat(model=OLLAMA_MODEL, messages=rendered, stream=True):
         yield part['message']['content']
 
 async def q_a(question: str, document: str) -> AsyncGenerator[str, None]:

@@ -6,7 +6,7 @@ This module exposes an async generator `chat()` that streams model output chunk-
 from typing import AsyncGenerator
 import asyncio
 from ollama import AsyncClient
-from config import OLLAMA_URL
+from config import OLLAMA_URL, OLLAMA_MODEL
 
 async def chat(input: dict[str, str]) -> AsyncGenerator[str, None]:
     """
@@ -22,7 +22,7 @@ async def chat(input: dict[str, str]) -> AsyncGenerator[str, None]:
     message = {'role': 'user', 'content': input.get('input', '')}
 
     # Call Ollama's async chat API with streaming enabled.
-    async for part in await AsyncClient(host=OLLAMA_URL).chat(model='llama3', messages=[message], stream=True):
+    async for part in await AsyncClient(host=OLLAMA_URL).chat(model=OLLAMA_MODEL, messages=[message], stream=True):
         yield part['message']['content']
 
 async def main():

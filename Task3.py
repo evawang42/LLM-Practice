@@ -9,7 +9,7 @@ response type and generating streaming answers using the Ollama language model.
 from typing import AsyncGenerator, Literal, Tuple, List, Dict
 import asyncio
 from ollama import AsyncClient
-from config import OLLAMA_URL
+from config import OLLAMA_URL, OLLAMA_MODEL
 from pathlib import Path
 
 IPromptMessage = Tuple[Literal['system', 'user', 'assistant', 'tool'], str]
@@ -41,7 +41,7 @@ async def chat(messages: list[IPromptMessage], input_data: dict[str, str]) -> As
         str: Incremental text chunks produced by the model.
     """
     rendered = [{'role': role, 'content': content.format(**input_data)} for role, content in messages]
-    async for part in await AsyncClient(host=OLLAMA_URL).chat(model='llama3', messages=rendered, stream=True):
+    async for part in await AsyncClient(host=OLLAMA_URL).chat(model=OLLAMA_MODEL, messages=rendered, stream=True):
         yield part['message']['content']
 
 async def input_router(question: str) -> int:
