@@ -137,6 +137,11 @@ event: end
 data: {}
 ```
 
+## Task 5 – Multi-turn Chat with Routing
+This task combines Task 3 (router) and Task 4 (streaming over SSE)
+- `input_router` classifies each user message into one of 7 routes.
+- If `7`, falls into `chit-chat`; else returns a placeholder.
+
 ## Reference
 - [Ollama Python Library](https://github.com/ollama/ollama-python)
 - [Understanding Server-Sent Events (SSE) with Node.js](https://itsfuad.medium.com/understanding-server-sent-events-sse-with-node-js-3e881c533081)
