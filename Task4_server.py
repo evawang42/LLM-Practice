@@ -17,8 +17,8 @@ async def sse_event(response: web.StreamResponse, event: str, data: Any) -> None
         event: The SSE "event" name (e.g., "data", "error", "end").
         data: The JSON-serializable payload for the "data:" line.
     """
-    see_format = f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
-    await response.write(see_format.encode("utf-8"))
+    sse_format = f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
+    await response.write(sse_format.encode("utf-8"))
 
 async def chat_handler(request: web.Request) -> web.StreamResponse:
     """
